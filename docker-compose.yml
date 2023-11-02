@@ -169,7 +169,7 @@ services:
       - TZ=${TZ}
       - URL=nidnarb.duckdns.org
       - VALIDATION=http
-      - SUBDOMAINS=www,overseerr, #optional
+      - SUBDOMAINS=www,overseerr #optional
     volumes:
       - ${CONFIG_ROOT}/config/swag:/config
     ports:
