@@ -1,0 +1,182 @@
+version: "3.4"
+services:
+  nzbget:
+    container_name: nzbget
+    image: lscr.io/linuxserver/nzbget:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - 6789:6789
+    networks:
+      - brandin-media-stack
+    volumes:
+      - ${MEDIA_ROOT}/downloads:/downloads 
+      - ${CONFIG_ROOT}/config/nzbget:/config 
+
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID} 
+      - TZ=${TZ} 
+    ports:
+      - 8989:8989
+    networks:
+      - brandin-media-stack
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_ROOT}/config/sonarr:/config
+      - ${MEDIA_ROOT}/complete/tv:/tv 
+      - ${MEDIA_ROOT}/downloads:/downloads 
+
+  tautulli:
+    container_name: tautulli
+    image: lscr.io/linuxserver/tautulli:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - 8181:8181
+    networks:
+      - brandin-media-stack
+    volumes:
+      - ${CONFIG_ROOT}/config/tautulli:/config
+
+  radarr:
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:latest    
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID} 
+      - TZ=${TZ} 
+    ports:
+      - 7878:7878
+    networks:
+      - brandin-media-stack
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_ROOT}/config/radarr:/config 
+      - ${MEDIA_ROOT}/complete/movies:/movies
+      - ${MEDIA_ROOT}/downloads:/downloads 
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    networks:
+      - brandin-media-stack
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    volumes:
+      - ${CONFIG_ROOT}/config/plex/db:/config 
+      - ${CONFIG_ROOT}/config/plex/transcode:/transcode
+      - ${MEDIA_ROOT}/complete:/data 
+
+  overseerr:
+      image: lscr.io/linuxserver/overseerr:latest
+      container_name: overseerr
+      environment:
+        - PUID=${PUID}
+        - PGID=${PGID}
+        - TZ=Etc/UTC
+      networks:
+        - brandin-media-stack
+      volumes:
+        - ${CONFIG_ROOT}/config/overseerr:/config 
+      ports:
+        - 5055:5055
+      restart: unless-stopped
+
+  bazarr:
+    container_name: bazarr
+    image: lscr.io/linuxserver/bazarr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID} 
+      - PGID=${PGID} 
+      - TZ=${TZ} 
+      - UMASK_SET=022 #optional
+    ports:
+      - 6767:6767
+    networks:
+      - brandin-media-stack
+    volumes:
+      - ${CONFIG_ROOT}/config/bazarr:/config 
+      - ${MEDIA_ROOT}/complete/movies:/movies 
+      - ${MEDIA_ROOT}/complete/tv:/tv
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    network_mode: host 
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ} 
+      - SUBDOMAINS=nidnarb
+      - TOKEN=ca40b62f-9843-485f-b9ae-c48fece33d4f
+      - UPDATE_IP=ipv4 #optional
+      - LOG_FILE=false #optional
+    volumes:
+      - ${CONFIG_ROOT}/config/duckdns:/config 
+    restart: unless-stopped
+
+  authelia:
+    container_name: authelia
+    image: authelia/authelia
+    restart: unless-stopped
+    networks:
+      - brandin-media-stack
+    expose:
+      - 9091
+    volumes:
+      - ${CONFIG_ROOT}/config/authelia:/config
+    environment:
+      - TZ=${TZ}
+
+  swag:
+    image: lscr.io/linuxserver/swag:latest
+    container_name: swag
+    networks:
+      - brandin-media-stack
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - URL=nidnarb.duckdns.org
+      - VALIDATION=http
+      - SUBDOMAINS=www,overseerr, #optional
+    volumes:
+      - ${CONFIG_ROOT}/config/swag:/config
+    ports:
+      - 443:443
+      - 80:80 
+    restart: unless-stopped
+
+networks:
+  brandin-media-stack:
+    name: brandin-media-stack
