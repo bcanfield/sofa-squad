@@ -90,7 +90,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - URL=nidnarb.duckdns.org
+      - URL=${SWAG_URL}
       - VALIDATION=http
       - SUBDOMAINS=www,overseerr #optional
     volumes:
@@ -141,8 +141,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ} 
-      - SUBDOMAINS=nidnarb
-      - TOKEN=ca40b62f-9843-485f-b9ae-c48fece33d4f
+      - SUBDOMAINS=${DUCK_DNS_SUBDOMAINS}
+      - TOKEN=${DUCK_DNS_TOKEN}
       - UPDATE_IP=ipv4 #optional
       - LOG_FILE=false #optional
     volumes:
